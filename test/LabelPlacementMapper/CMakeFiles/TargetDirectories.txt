@@ -1,0 +1,3 @@
+/home/turja/Desktop/EditLabel/test/LabelPlacementMapper/CMakeFiles/rebuild_cache.dir
+/home/turja/Desktop/EditLabel/test/LabelPlacementMapper/CMakeFiles/LabelPlacementMapper.dir
+/home/turja/Desktop/EditLabel/test/LabelPlacementMapper/CMakeFiles/edit_cache.dir

@@ -1,0 +1,3 @@
+/home/turja/Desktop/EditLabel/CMakeFiles/rebuild_cache.dir
+/home/turja/Desktop/EditLabel/CMakeFiles/EditVtk.dir
+/home/turja/Desktop/EditLabel/CMakeFiles/edit_cache.dir
