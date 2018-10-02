@@ -19,13 +19,12 @@
 #include <vtkDelimitedTextReader.h>
 #include <vtkTable.h>
 #include <vtkAppendPolyData.h>
-#include "csvRead.cpp"
 
 int main(int, char *argv[])
 {
     std::string inputFilenames[2] = {strdup(argv[1]), strdup(argv[2])}; //lh_white_matter.vtk, rh_white_matter.vtk
-    std::string outputFilenames[2] = {strdup(argv[3]), strdup(argv[4])}; //lh_white_matter_relabeled.vtk, rh_white_matter_relabeled.vtk
-    int debug = std::stoi(strdup(argv[5]));
+    std::string outputFilename = strdup(argv[3]); //combinedvtk
+    int debug = std::stoi(strdup(argv[4]));
     std::string mapFiles[] = {"map_lh.txt", "map_rh.txt"};
     std::map<int, int> m;
     vtkSmartPointer<vtkPolyData> polyData[2];
@@ -34,13 +33,12 @@ int main(int, char *argv[])
     for (int i = 0; i < 2; i++) {
         const char *mapFile = mapFiles[i].c_str();
         const char *inputFilename = inputFilenames[i].c_str();
-        const char *outputFilename = outputFilenames[i].c_str();
 
         // Read file
         vtkSmartPointer<vtkPolyDataReader> polyIn = vtkSmartPointer<vtkPolyDataReader>::New();
         polyIn->SetFileName(inputFilename); 
         polyIn->Update();
-        vtkSmartPointer<vtkPolyData> polydata = polyIn -> GetOutput();
+        vtkSmartPointer<vtkPolyData> polydata = polyIn->GetOutput();
         unsigned int nPoints = polydata->GetNumberOfPoints();
         unsigned int numberOfArrays = polydata-> GetPointData()->GetNumberOfArrays();
         
@@ -55,8 +53,8 @@ int main(int, char *argv[])
 
         vtkTable* table = reader->GetOutput();
         for(vtkIdType i = 0; i < table->GetNumberOfRows(); i++) {
-            int key = table -> GetValue(i, 0).ToInt();
-            int value = table -> GetValue(i, 1).ToInt();
+            int key = table->GetValue(i, 0).ToInt();
+            int value = table->GetValue(i, 1).ToInt();
             m[key] = value;
 
             if (debug) {
@@ -68,15 +66,15 @@ int main(int, char *argv[])
         int count = 0;
         int id = 0;
         for (int i = 0; i < numberOfArrays; i++) {
-            const char *label = polydata -> GetPointData() -> GetArrayName(i);
-            vtkIntArray *data = vtkIntArray::SafeDownCast(polydata -> GetPointData() -> GetArray(label));
-            printf("Numer of element in %s is %d\n", label, data -> GetDataSize());
+            const char *label = polydata->GetPointData()->GetArrayName(i);
+            vtkIntArray *data = vtkIntArray::SafeDownCast(polydata->GetPointData()->GetArray(label));
+            printf("Numer of element in %s is %ld\n", label, data->GetDataSize());
             for (int j = 0; j < nPoints; j++) {
-                int k = data -> GetComponent(j, 0);
+                int k = data->GetComponent(j, 0);
                 int updateVal;
                 if(m.find(k) != m.end()) {
                     updateVal = m[k];
-                    data -> SetComponent(j, 0, updateVal);
+                    data->SetComponent(j, 0, updateVal);
                     std::cout << k << " found" << endl;
                     count++;
                 } else {
@@ -88,49 +86,26 @@ int main(int, char *argv[])
                 std::cout << endl;
             }
         }
+        
+        polyData[i] = polydata; // Storing the polydata for later merging event
 
         if (debug) {
-            printf("Number of Arrays %d\n", numberOfArrays);
-            printf("Number of Points %d\n", nPoints);
-            printf("Number of match %d\n", count);
-        }
-
-        vtkSmartPointer<vtkPolyDataWriter> SurfaceWriter = vtkSmartPointer<vtkPolyDataWriter>::New();
-        SurfaceWriter->SetInputData(polydata);
-        SurfaceWriter->SetFileName(outputFilename);
-        SurfaceWriter->Update();
-        polyData[i] = polydata;
-    }
-    
-    // Update scalar
-    // polydata->GetPointData()->SetActiveScalars(scalarName);
-    // vtkIntArray *fieldData = (vtkIntArray*) polydata->GetFieldData()->GetAbstractArray(fieldName);
-    
-
-    /*if (scalarData) {
-        for (int i = 0; i < nPoints; i++) {
-            int k = scalarData -> GetComponent(i, 0);
-            if (m.find(k) != m.end()) {
-                int updateVal = m[k];
-                if(debug) {
-                    printf("Key : %d, update: %d\n", k, updateVal);
-                }
-                scalarData -> SetComponent(i, 0, updateVal);
-            } else if(debug) {
-                printf("Data Not Found for : %d\n", scalarData -> GetComponent(i, 0));
-            }
+            cout << "Number of Arrays " << numberOfArrays << endl;
+            cout << "Number of Points " << nPoints << endl;
+            cout << "Number of match " << count << endl;
         }
     }
-  */
     
+    // Merge two polydatas into one
     vtkSmartPointer<vtkAppendPolyData> appendFilter = vtkSmartPointer<vtkAppendPolyData>::New();
-    appendFilter -> AddInputData(polyData[0]);
-    appendFilter -> AddInputData(polyData[1]);
-    appendFilter -> Update();
+    appendFilter->AddInputData(polyData[0]);
+    appendFilter->AddInputData(polyData[1]);
+    appendFilter->Update();
 
+    // Write the combined polydata into outputfile
     vtkSmartPointer<vtkPolyDataWriter> SurfaceWriter = vtkSmartPointer<vtkPolyDataWriter>::New();
-    SurfaceWriter->SetInputData(appendFilter -> GetOutput());
-    SurfaceWriter->SetFileName("combinedInnerRelabeled.vtk");
+    SurfaceWriter->SetInputData(appendFilter->GetOutput());
+    SurfaceWriter->SetFileName(outputFilename.c_str());
     SurfaceWriter->Update();
     
     return EXIT_SUCCESS;

@@ -47,24 +47,6 @@ vtkTable.h
 -
 vtkAppendPolyData.h
 -
-csvRead.cpp
-/home/turja/Desktop/EditLabel/csvRead.cpp
-
-/home/turja/Desktop/EditLabel/csvRead.cpp
-iostream
--
-fstream
--
-vector
--
-iterator
--
-string
--
-algorithm
--
-boost/algorithm/string.hpp
--
 
 /home/turja/Desktop/VTKFileProcessor/VTK-build/Common/Core/vtkAtomic.h
 vtkCommonCoreModule.h
